@@ -2,13 +2,17 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const cors = require('cors');
+const express = require('express');
 
 // Récupération des clés API depuis les variables d'environnement
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const weatherApiKey = process.env.OPENWEATHERMAP_API_KEY;
+const port = process.env.PORT || 3000;
+const url = process.env.RENDER_URL;
 
 // Création de l'instance du bot
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token);
 
 console.log('🤖 Bot météo démarré...');
 
@@ -22,6 +26,22 @@ const weatherEmojis = {
     'Snow': '❄️',
     'Mist': '🌫️'
 };
+
+// Création du serveur Express
+const app = express();
+app.use(express.json()); // Pour que notre serveur comprenne le JSON envoyé par Telegram
+app.use(cors())
+
+// C'est ici que Telegram enverra les messages (requêtes POST)
+app.post(`/bot${token}`, (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200); // On répond "OK" à Telegram pour dire qu'on a bien reçu
+});
+
+// Le serveur se met en écoute sur le port
+app.listen(port, () => {
+  console.log(`🚀 Notre app écoute sur le port ${port}`);
+});
 
 // Le bot écoute tous les messages entrants
 bot.on('message', async (msg) => {
