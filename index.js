@@ -13,6 +13,7 @@ const url = process.env.RENDER_URL;
 
 // Création de l'instance du bot
 const bot = new TelegramBot(token);
+bot.setWebHook(`${url}/bot${token}`);
 
 console.log('🤖 Bot météo démarré...');
 
