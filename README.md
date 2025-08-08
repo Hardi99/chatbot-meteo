@@ -4,7 +4,7 @@ Voici mon retour au test technique. Il s'agit d'un chatbot simple pour Telegram 
 
 ## 🔗 Accès au Chatbot
 
-Vous pouvez interagir directement avec le bot sur Telegram via le lien suivant :
+Le chatbot est actuellement déployé et fonctionnel, vous pouvez y accéder sur Telegram via le lien suivant :
 ➡️ **[t.me/Harutenki_bot](https://t.me/Harutenki_bot)**
 
 ## ✨ Fonctionnalités
