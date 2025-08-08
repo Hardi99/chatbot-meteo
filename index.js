@@ -8,14 +8,43 @@ const express = require('express');
 // Récupération des clés API depuis les variables d'environnement
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const weatherApiKey = process.env.OPENWEATHERMAP_API_KEY;
-const port = process.env.PORT || 3000;
-const url = process.env.RENDER_URL;
 
-// Création de l'instance du bot
-const bot = new TelegramBot(token);
-bot.setWebHook(`${url}/bot${token}`);
+const isProduction = process.env.NODE_ENV === 'production';
 
-console.log('🤖 Bot météo démarré...');
+let bot;
+
+if (isProduction) {
+    // --- MODE PRODUCTION (sur Render) ---
+    console.log('🤖 Démarrage en mode Production (Webhook)...');
+    
+    const port = process.env.PORT || 3000;
+    const url = process.env.RENDER_URL;
+    
+    // On crée le bot sans option particulière
+    bot = new TelegramBot(token);
+    
+    // On configure le webhook
+    bot.setWebHook(`${url}/bot${token}`);
+
+    const app = express();
+    app.use(express.json());
+
+    app.post(`/bot${token}`, (req, res) => {
+        bot.processUpdate(req.body);
+        res.sendStatus(200);
+    });
+
+    app.listen(port, () => {
+        console.log(`🚀 Serveur démarré sur le port ${port}`);
+    });
+
+} else {
+    // --- MODE DÉVELOPPEMENT (sur notre PC) ---
+    console.log('🤖 Démarrage en mode Développement (Polling)...');
+    
+    // On crée le bot avec l'option "polling: true"
+    bot = new TelegramBot(token, { polling: true });
+}
 
 // Dictionnaire pour mapper les conditions météo à des emojis
 const weatherEmojis = {
@@ -27,22 +56,6 @@ const weatherEmojis = {
     'Snow': '❄️',
     'Mist': '🌫️'
 };
-
-// Création du serveur Express
-const app = express();
-app.use(express.json()); // Pour que notre serveur comprenne le JSON envoyé par Telegram
-app.use(cors())
-
-// C'est ici que Telegram enverra les messages (requêtes POST)
-app.post(`/bot${token}`, (req, res) => {
-    bot.processUpdate(req.body);
-    res.sendStatus(200); // On répond "OK" à Telegram pour dire qu'on a bien reçu
-});
-
-// Le serveur se met en écoute sur le port
-app.listen(port, () => {
-  console.log(`🚀 Notre app écoute sur le port ${port}`);
-});
 
 // Le bot écoute tous les messages entrants
 bot.on('message', async (msg) => {
